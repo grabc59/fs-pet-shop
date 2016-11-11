@@ -14,8 +14,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // app.use(express.static('public'));
 
-app.get('/pets', (req, res) => {
-  fs.readFile(petsPath, 'utf8', (err, petsJSON, next) => {
+app.get('/pets', (req, res, next) => {
+  fs.readFile(petsPath, 'utf8', (err, petsJSON) => {
     if (err) return next(err);
     var pets = JSON.parse(petsJSON);
     res.set('Content-Type', 'application/json');
@@ -23,8 +23,8 @@ app.get('/pets', (req, res) => {
   });
 });
 
-app.get('/pets/:index', (req, res) => {
-  fs.readFile(petsPath, 'utf8', (err, petsJSON, next) => {
+app.get('/pets/:index', (req, res, next) => {
+  fs.readFile(petsPath, 'utf8', (err, petsJSON) => {
     if (err) return next(err);
     var index = Number.parseInt(req.params.index);
     var pets = JSON.parse(petsJSON);
@@ -37,12 +37,12 @@ app.get('/pets/:index', (req, res) => {
   });
 });
 
-app.post('/pets', (req, res) => {
+app.post('/pets', (req, res, next) => {
   var pet = req.body;
   if (!pet.name || !pet.age || !pet.kind) {
     return res.sendStatus(400);
   }
-  fs.readFile(petsPath, 'utf8', (err, petsJSON, next) => {
+  fs.readFile(petsPath, 'utf8', (err, petsJSON) => {
     if (err) return next(err);
     var pets = JSON.parse(petsJSON);
     pets.push(pet);
