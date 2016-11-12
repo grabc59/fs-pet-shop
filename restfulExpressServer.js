@@ -50,7 +50,7 @@ app.post('/pets', (req, res, next) => {
         kind: req.body.kind,
         name: req.body.name,
     }
-    if (!pet.age || !pet.kind || !pet.name) {
+    if (isNaN(pet.age) || !pet.kind || !pet.name) {
         return res.sendStatus(400);
     }
 
@@ -69,7 +69,6 @@ app.post('/pets', (req, res, next) => {
 });
 
 app.put('/pets/:index', (req, res, next) => {
-
   fs.readFile(petsPath, 'utf8', (err, data) => {
       if (err) return next(err);
       var pets = JSON.parse(data);
@@ -82,7 +81,7 @@ app.put('/pets/:index', (req, res, next) => {
         kind: req.body.kind,
         name: req.body.name,
       }
-      if (!pets[index].age || !pets[index].kind || !pets[index].name) {
+      if (isNaN(pets[index].age) || !pets[index].kind || !pets[index].name) {
           return res.sendStatus(400);
       }
       var petsJSON = JSON.stringify(pets);
