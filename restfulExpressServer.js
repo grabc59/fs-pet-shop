@@ -9,13 +9,33 @@ var app = express();
 var port = process.env.PORT || 8000;
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
+var basicAuth = require('basic-auth');
+
 
 app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: false }));
 app.use(morgan('short'));
 // app.use(express.static('public'));
 
-app.get('/pets', (req, res, next) => {
+// Authenticator
+var auth = function (req, res, next) {
+  function unauthorized(res) {
+    res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+    return res.sendStatus(401);
+  };
+  var user = basicAuth(req);
+
+  if (!user || !user.name || !user.pass) {
+    return unauthorized(res);
+  };
+  if (user.name === 'foo' && user.pass === 'bar') {
+    return next();
+  } else {
+    return unauthorized(res);
+  };
+};
+
+app.get('/pets',  auth, (req, res, next) => {
     fs.readFile(petsPath, 'utf8', (err, data) => {
         if (err) return next(err);
         var pets = JSON.parse(data);
@@ -106,8 +126,44 @@ app.delete('/pets/:index', (req, res, next) => {
         if (err) return next(err);
         res.send(pet);
     });
-  })
-})
+  });
+});
+
+app.patch('/pets/:index', (req, res, next) => {
+  // The route handler must only update the record if age is an integer, if kind is not missing, or if name is not missing.
+  fs.readFile(petsPath, 'utf8', (err, data) => {
+    if (err) return next(err);
+    var pets = JSON.parse(data);
+    var index = Number.parseInt(req.params.index);
+    var updatedPet = {};
+    var patchData = {
+      age: Number.parseInt(req.body.age),
+      kind: req.body.kind,
+      name: req.body.name,
+    };
+
+    Object.assign(updatedPet, pets[index]);
+    if (Number.isNaN(index) || index < 0 || index >= pets.length) {
+      return res.sendStatus(404);
+    }
+    if ( !isNaN(patchData.age) ) {
+      updatedPet.age = patchData.age;
+    }
+    if ( patchData.kind ) {
+      updatedPet.kind = patchData.kind;
+    }
+    if ( patchData.name ) {
+      updatedPet.name = patchData.name;
+    }
+    pets[index] = updatedPet;
+
+    var petsJSON = JSON.stringify(pets);
+    fs.writeFile(petsPath, petsJSON, (err) => {
+        if (err) return next(err);
+        return res.send(pets[index]);
+    });
+  });
+});
 
 app.get('*', (req, res) => {
     res.sendStatus(404);
