@@ -44,7 +44,7 @@ app.get('/pets',  auth, (req, res, next) => {
     });
 });
 
-app.get('/pets/:index', (req, res, next) => {
+app.get('/pets/:index', auth, (req, res, next) => {
     fs.readFile(petsPath, 'utf8', (err, data) => {
         if (err) return next(err);
         var index = Number.parseInt(req.params.index);
@@ -58,13 +58,13 @@ app.get('/pets/:index', (req, res, next) => {
     });
 });
 
-app.get('/boom', function(req, res, next) {
+app.get('/boom', auth, function(req, res, next) {
     Item.find(function(err, items) {
         if (err) return next(err);
     });
 });
 
-app.post('/pets', (req, res, next) => {
+app.post('/pets', auth, (req, res, next) => {
     var pet = {
         age: Number.parseInt(req.body.age),
         kind: req.body.kind,
@@ -77,7 +77,6 @@ app.post('/pets', (req, res, next) => {
     fs.readFile(petsPath, 'utf8', (err, data) => {
         if (err) return next(err);
         var pets = JSON.parse(data);
-        console.log(pet);
         pets.push(pet);
         let petsJSON = JSON.stringify(pets);
 
@@ -88,7 +87,7 @@ app.post('/pets', (req, res, next) => {
     });
 });
 
-app.put('/pets/:index', (req, res, next) => {
+app.put('/pets/:index', auth, (req, res, next) => {
   fs.readFile(petsPath, 'utf8', (err, data) => {
       if (err) return next(err);
       var pets = JSON.parse(data);
@@ -112,7 +111,7 @@ app.put('/pets/:index', (req, res, next) => {
   });
 });
 
-app.delete('/pets/:index', (req, res, next) => {
+app.delete('/pets/:index', auth, (req, res, next) => {
   fs.readFile(petsPath, 'utf8', (err, data) => {
     if (err) return next(err);
     var pets = JSON.parse(data);
@@ -129,23 +128,23 @@ app.delete('/pets/:index', (req, res, next) => {
   });
 });
 
-app.patch('/pets/:index', (req, res, next) => {
+app.patch('/pets/:index', auth, (req, res, next) => {
   // The route handler must only update the record if age is an integer, if kind is not missing, or if name is not missing.
   fs.readFile(petsPath, 'utf8', (err, data) => {
     if (err) return next(err);
     var pets = JSON.parse(data);
     var index = Number.parseInt(req.params.index);
-    var updatedPet = {};
     var patchData = {
       age: Number.parseInt(req.body.age),
       kind: req.body.kind,
       name: req.body.name,
     };
+    var updatedPet = Object.assign({}, pets[index]);
 
-    Object.assign(updatedPet, pets[index]);
     if (Number.isNaN(index) || index < 0 || index >= pets.length) {
       return res.sendStatus(404);
     }
+
     if ( !isNaN(patchData.age) ) {
       updatedPet.age = patchData.age;
     }
